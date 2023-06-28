@@ -1,17 +1,32 @@
 import Head from 'next/head'
 import styles from './comments.module.scss'
 import { useRouter } from 'next/router';
-import { useAppSelector } from '@/hooks/reduxHook';
-import { getCommentsList } from '@/store/comments';
 import Link from 'next/link';
 import PostComment from '@/components/PostComment/postComment';
+import { useEffect, useState } from 'react';
+import { IComment } from '@/models';
+import getCommentsByPostID from '@/services/getCommentsByPostID';
+import { wrapAsyncFunction } from '@/utils/wrapAsyncFunction';
+import Loader from '@/components/Loader/loader';
 
 export default function Comment(): React.ReactElement {
     const router = useRouter();
     const currentPost = router.query.postId as string;
-    const comments = useAppSelector(getCommentsList(+currentPost));
 
-    console.log(comments);
+    const [comments, setComments] = useState<IComment[]>([]);
+    const [isLoaded, setIsLoaded] = useState<boolean>(true);
+
+    const fetchData = async () => {
+        setIsLoaded(true);
+        const uploadedPosts = await getCommentsByPostID(currentPost);
+        setComments(uploadedPosts)
+        setIsLoaded(false);
+    };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(wrapAsyncFunction(fetchData), []);
+
+    if (isLoaded) return <Loader />;
 
     return (
         <>

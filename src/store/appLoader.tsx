@@ -1,9 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { AxiosError } from "axios";
-import { getCommentsLoadingStatus, loadCommentsList } from "./comments";
 import Loader from "@/components/Loader/loader";
 import { useAppDispatch, useAppSelector } from "../hooks/reduxHook";
-import { loadPostsList } from "./posts";
 import { wrapAsyncFunction } from "@/utils/wrapAsyncFunction";
 import { loadPaginateFilter } from "./paginateFilter";
 import { loadSearchTitleFilter } from "./searchTitleFilter";
@@ -14,16 +12,16 @@ const AppLoader = ({
     children: React.ReactElement;
 }): React.ReactElement => {
     const dispatch = useAppDispatch();
-    const isCommentsLoading = useAppSelector(getCommentsLoadingStatus());
+    const [isLoaded, setIsLoaded] = useState<boolean>(true);
 
     const fetchData = async () => {
         try {
+            setIsLoaded(true);
             await Promise.all([
-                dispatch(loadCommentsList()),
-                dispatch(loadPostsList()),
                 dispatch(loadPaginateFilter()),
                 dispatch(loadSearchTitleFilter())
             ]);
+            setIsLoaded(false);
         } catch (e) {
             console.log(e);
         }
@@ -32,7 +30,7 @@ const AppLoader = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(wrapAsyncFunction(fetchData), []);
 
-    if (isCommentsLoading) return <Loader />;
+    if (isLoaded) return <Loader />;
 
     return <>{children}</>;
 };
